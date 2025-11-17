@@ -13,9 +13,9 @@ define('UPDATE_TO_DB_REVISION', 24);
 define('UPDATE_TO_SI_REVISION', 2);
 define('UPDATE_TO_PARSER_REVISION', 2);
 
-define('MIN_PHP_VERSION', '5.6.4');
-define('MIN_MYSQL_VERSION', '5.0.6');
-define('MIN_PGSQL_VERSION', '7.0.0');
+define('MIN_PHP_VERSION', '7.4.0');
+define('MIN_MYSQL_VERSION', '5.7.0');
+define('MIN_PGSQL_VERSION', '10.0.0');
 define('PUN_SEARCH_MIN_WORD', 3);
 define('PUN_SEARCH_MAX_WORD', 20);
 
@@ -303,8 +303,8 @@ function alter_table_utf8($table)
 		);
 	}
 
-	// Set table default charset to utf8
-	$db->query('ALTER TABLE '.$table.' CHARACTER SET utf8') or error('Unable to set table character set', __FILE__, __LINE__, $db->error());
+	// Set table default charset to utf8mb4
+	$db->query('ALTER TABLE '.$table.' CHARACTER SET utf8mb4') or error('Unable to set table character set', __FILE__, __LINE__, $db->error());
 
 	// Find out which columns need converting and build SQL statements
 	$result = $db->query('SHOW FULL COLUMNS FROM '.$table) or error('Unable to fetch column information', __FILE__, __LINE__, $db->error());
@@ -314,13 +314,13 @@ function alter_table_utf8($table)
 			continue;
 
 		list($type) = explode('(', $cur_column['Type']);
-		if (isset($types[$type]) && strpos($cur_column['Collation'], 'utf8') === false)
+		if (isset($types[$type]) && strpos($cur_column['Collation'], 'utf8mb4') === false)
 		{
 			$allow_null = ($cur_column['Null'] == 'YES');
-			$collate = (substr($cur_column['Collation'], -3) == 'bin') ? 'utf8_bin' : 'utf8_general_ci';
+			$collate = (substr($cur_column['Collation'], -3) == 'bin') ? 'utf8mb4_bin' : 'utf8mb4_general_ci';
 
 			$db->alter_field($table, $cur_column['Field'], preg_replace('%'.$type.'%i', $types[$type], $cur_column['Type']), $allow_null, $cur_column['Default'], null, true) or error('Unable to alter field to binary', __FILE__, __LINE__, $db->error());
-			$db->alter_field($table, $cur_column['Field'], $cur_column['Type'].' CHARACTER SET utf8 COLLATE '.$collate, $allow_null, $cur_column['Default'], null, true) or error('Unable to alter field to utf8', __FILE__, __LINE__, $db->error());
+			$db->alter_field($table, $cur_column['Field'], $cur_column['Type'].' CHARACTER SET utf8mb4 COLLATE '.$collate, $allow_null, $cur_column['Default'], null, true) or error('Unable to alter field to utf8mb4', __FILE__, __LINE__, $db->error());
 		}
 	}
 }
@@ -1548,12 +1548,12 @@ switch ($stage)
 					// Renaming a user also affects a bunch of other stuff, lets fix that too...
 					$db->query('UPDATE '.$db->prefix.'posts SET poster=\''.$db->escape($username).'\' WHERE poster_id='.$id) or error('Unable to update posts', __FILE__, __LINE__, $db->error());
 
-					// TODO: The following must compare using collation utf8_bin otherwise we will accidently update posts/topics/etc belonging to both of the duplicate users, not just the one we renamed!
-					$db->query('UPDATE '.$db->prefix.'posts SET edited_by=\''.$db->escape($username).'\' WHERE edited_by=\''.$db->escape($old_username).'\' COLLATE utf8_bin') or error('Unable to update posts', __FILE__, __LINE__, $db->error());
-					$db->query('UPDATE '.$db->prefix.'topics SET poster=\''.$db->escape($username).'\' WHERE poster=\''.$db->escape($old_username).'\' COLLATE utf8_bin') or error('Unable to update topics', __FILE__, __LINE__, $db->error());
-					$db->query('UPDATE '.$db->prefix.'topics SET last_poster=\''.$db->escape($username).'\' WHERE last_poster=\''.$db->escape($old_username).'\' COLLATE utf8_bin') or error('Unable to update topics', __FILE__, __LINE__, $db->error());
-					$db->query('UPDATE '.$db->prefix.'forums SET last_poster=\''.$db->escape($username).'\' WHERE last_poster=\''.$db->escape($old_username).'\' COLLATE utf8_bin') or error('Unable to update forums', __FILE__, __LINE__, $db->error());
-					$db->query('UPDATE '.$db->prefix.'online SET ident=\''.$db->escape($username).'\' WHERE ident=\''.$db->escape($old_username).'\' COLLATE utf8_bin') or error('Unable to update online list', __FILE__, __LINE__, $db->error());
+					// TODO: The following must compare using collation utf8mb4_bin otherwise we will accidently update posts/topics/etc belonging to both of the duplicate users, not just the one we renamed!
+					$db->query('UPDATE '.$db->prefix.'posts SET edited_by=\''.$db->escape($username).'\' WHERE edited_by=\''.$db->escape($old_username).'\' COLLATE utf8mb4_bin') or error('Unable to update posts', __FILE__, __LINE__, $db->error());
+					$db->query('UPDATE '.$db->prefix.'topics SET poster=\''.$db->escape($username).'\' WHERE poster=\''.$db->escape($old_username).'\' COLLATE utf8mb4_bin') or error('Unable to update topics', __FILE__, __LINE__, $db->error());
+					$db->query('UPDATE '.$db->prefix.'topics SET last_poster=\''.$db->escape($username).'\' WHERE last_poster=\''.$db->escape($old_username).'\' COLLATE utf8mb4_bin') or error('Unable to update topics', __FILE__, __LINE__, $db->error());
+					$db->query('UPDATE '.$db->prefix.'forums SET last_poster=\''.$db->escape($username).'\' WHERE last_poster=\''.$db->escape($old_username).'\' COLLATE utf8mb4_bin') or error('Unable to update forums', __FILE__, __LINE__, $db->error());
+					$db->query('UPDATE '.$db->prefix.'online SET ident=\''.$db->escape($username).'\' WHERE ident=\''.$db->escape($old_username).'\' COLLATE utf8mb4_bin') or error('Unable to update online list', __FILE__, __LINE__, $db->error());
 
 					// If the user is a moderator or an administrator we have to update the moderator lists
 					$result = $db->query('SELECT g_moderator FROM '.$db->prefix.'groups WHERE g_id='.$cur_user['group_id']) or error('Unable to fetch group', __FILE__, __LINE__, $db->error());

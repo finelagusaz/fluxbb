@@ -51,7 +51,7 @@ class MysqlDBLayer implements DBLayer
 
 		// Setup the client-server character set (UTF-8)
 		if (!defined('FORUM_NO_SET_NAMES'))
-			$this->set_names('utf8');
+			$this->set_names('utf8mb4');
 	}
 
 
@@ -263,7 +263,7 @@ class MysqlDBLayer implements DBLayer
 			$query .= $field_name.' '.$field_data['datatype'];
 
 			if (isset($field_data['collation']))
-				$query .= 'CHARACTER SET utf8 COLLATE utf8_'.$field_data['collation'];
+				$query .= 'CHARACTER SET utf8mb4 COLLATE utf8mb4_'.$field_data['collation'];
 
 			if (!$field_data['allow_null'])
 				$query .= ' NOT NULL';
@@ -293,7 +293,7 @@ class MysqlDBLayer implements DBLayer
 		}
 
 		// We remove the last two characters (a newline and a comma) and add on the ending
-		$query = substr($query, 0, strlen($query) - 2)."\n".') ENGINE = '.(isset($schema['ENGINE']) ? $schema['ENGINE'] : 'MyISAM').' CHARACTER SET utf8';
+		$query = substr($query, 0, strlen($query) - 2)."\n".') ENGINE = '.(isset($schema['ENGINE']) ? $schema['ENGINE'] : 'InnoDB').' CHARACTER SET utf8mb4';
 
 		return $this->query($query) ? true : false;
 	}
