@@ -11,3 +11,5 @@
 /img/avatars/*.jpg
 /img/avatars/*.gif
 /config.php
+.phpunit.result.cache
+vendor/
