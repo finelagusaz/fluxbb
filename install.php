@@ -13,9 +13,9 @@ define('FORUM_DB_REVISION', 24);
 define('FORUM_SI_REVISION', 2);
 define('FORUM_PARSER_REVISION', 2);
 
-define('MIN_PHP_VERSION', '5.6.4');
-define('MIN_MYSQL_VERSION', '5.0.6');
-define('MIN_PGSQL_VERSION', '7.0.0');
+define('MIN_PHP_VERSION', '7.4.0');
+define('MIN_MYSQL_VERSION', '5.7.0');
+define('MIN_PGSQL_VERSION', '10.0.0');
 define('PUN_SEARCH_MIN_WORD', 3);
 define('PUN_SEARCH_MAX_WORD', 20);
 
