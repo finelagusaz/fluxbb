@@ -772,6 +772,12 @@ function do_bbcode($text, $is_signature = false)
 {
 	global $lang_common, $pun_user, $pun_config, $re_list;
 
+	// Initialize arrays to avoid null warnings
+	$pattern = array();
+	$replace = array();
+	$pattern_callback = array();
+	$replace_callback = array();
+
 	if (strpos($text, '[quote') !== false)
 	{
 		$text = preg_replace('%\[quote\]\s*%', '</p><div class="quotebox"><blockquote><div><p>', $text);
@@ -814,7 +820,7 @@ function do_bbcode($text, $is_signature = false)
 	$replace[] = '<span style="color: $1">$2</span>';
 	$replace[] = '</p><h5>$1</h5><p>';
 
-	if (($is_signature && $pun_config['p_sig_img_tag'] == '1') || (!$is_signature && $pun_config['p_message_img_tag'] == '1'))
+	if (($is_signature && isset($pun_config['p_sig_img_tag']) && $pun_config['p_sig_img_tag'] == '1') || (!$is_signature && isset($pun_config['p_message_img_tag']) && $pun_config['p_message_img_tag'] == '1'))
 	{
 		$pattern_callback[] = '%\[img\]((ht|f)tps?://)([^\s<"]*?)\[/img\]%';
 		$pattern_callback[] = '%\[img=([^\[]*?)\]((ht|f)tps?://)([^\s<"]*?)\[/img\]%';
@@ -861,7 +867,9 @@ function do_bbcode($text, $is_signature = false)
 	$count = count($pattern_callback);
 	for($i = 0 ; $i < $count ; $i++)
 	{
-		$text = preg_replace_callback($pattern_callback[$i], $replace_callback[$i], $text);
+		// Skip if pattern, callback, or text is null or empty
+		if (!empty($pattern_callback[$i]) && !empty($replace_callback[$i]) && !is_null($text))
+			$text = preg_replace_callback($pattern_callback[$i], $replace_callback[$i], $text);
 	}
 	return $text;
 }
@@ -904,6 +912,10 @@ function do_smilies($text)
 {
 	global $smilies;
 
+	// Return early if smilies is not defined or empty
+	if (!isset($smilies) || !is_array($smilies))
+		return $text;
+
 	$text = ' '.$text.' ';
 
 	foreach ($smilies as $smiley_text => $smiley_img)
@@ -933,10 +945,10 @@ function parse_message($text, $hide_smilies)
 	if (strpos($text, '[code]') !== false && strpos($text, '[/code]') !== false)
 		list($inside, $text) = extract_blocks($text, '[code]', '[/code]');
 
-	if ($pun_config['p_message_bbcode'] == '1' && strpos($text, '[') !== false && strpos($text, ']') !== false)
+	if (isset($pun_config['p_message_bbcode']) && $pun_config['p_message_bbcode'] == '1' && strpos($text, '[') !== false && strpos($text, ']') !== false)
 		$text = do_bbcode($text);
 
-	if ($pun_config['o_smilies'] == '1' && $pun_user['show_smilies'] == '1' && $hide_smilies == '0')
+	if (isset($pun_config['o_smilies']) && $pun_config['o_smilies'] == '1' && isset($pun_user['show_smilies']) && $pun_user['show_smilies'] == '1' && $hide_smilies == '0')
 		$text = do_smilies($text);
 
 	// Deal with newlines, tabs and multiple spaces
