@@ -15,6 +15,14 @@ if (!defined('MB_OVERLOAD_STRING')) {
 // Define base paths
 define('PUN_ROOT', dirname(__DIR__) . '/');
 define('PUN', '');
+define('FORUM_CACHE_DIR', PUN_ROOT . 'cache/');
+
+// Define commonly used constants
+define('PUN_UNVERIFIED', 0);
+define('PUN_ADMIN', 1);
+define('PUN_MOD', 2);
+define('PUN_GUEST', 3);
+define('PUN_MEMBER', 4);
 
 // Load required files
 require_once PUN_ROOT . 'include/functions.php';
