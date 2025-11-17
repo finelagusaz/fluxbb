@@ -871,6 +871,11 @@ function paginate($num_pages, $cur_page, $link)
 	$pages = array();
 	$link_to_all = false;
 
+	// Set default pagination text if not defined
+	$prev_text = isset($lang_common['Previous']) ? $lang_common['Previous'] : 'Previous';
+	$next_text = isset($lang_common['Next']) ? $lang_common['Next'] : 'Next';
+	$spacer_text = isset($lang_common['Spacer']) ? $lang_common['Spacer'] : '…';
+
 	// If $cur_page == -1, we link to all pages (used in viewforum.php)
 	if ($cur_page == -1)
 	{
@@ -884,14 +889,14 @@ function paginate($num_pages, $cur_page, $link)
 	{
 		// Add a previous page link
 		if ($num_pages > 1 && $cur_page > 1)
-			$pages[] = '<a rel="prev"'.(empty($pages) ? ' class="item1"' : '').' href="'.$link.($cur_page == 2 ? '' : '&amp;p='.($cur_page - 1)).'">'.$lang_common['Previous'].'</a>';
+			$pages[] = '<a rel="prev"'.(empty($pages) ? ' class="item1"' : '').' href="'.$link.($cur_page == 2 ? '' : '&amp;p='.($cur_page - 1)).'">'.$prev_text.'</a>';
 
 		if ($cur_page > 3)
 		{
 			$pages[] = '<a'.(empty($pages) ? ' class="item1"' : '').' href="'.$link.'">1</a>';
 
 			if ($cur_page > 5)
-				$pages[] = '<span class="spacer">'.$lang_common['Spacer'].'</span>';
+				$pages[] = '<span class="spacer">'.$spacer_text.'</span>';
 		}
 
 		// Don't ask me how the following works. It just does, OK? :-)
@@ -908,14 +913,14 @@ function paginate($num_pages, $cur_page, $link)
 		if ($cur_page <= ($num_pages-3))
 		{
 			if ($cur_page != ($num_pages-3) && $cur_page != ($num_pages-4))
-				$pages[] = '<span class="spacer">'.$lang_common['Spacer'].'</span>';
+				$pages[] = '<span class="spacer">'.$spacer_text.'</span>';
 
 			$pages[] = '<a'.(empty($pages) ? ' class="item1"' : '').' href="'.$link.'&amp;p='.$num_pages.'">'.forum_number_format($num_pages).'</a>';
 		}
 
 		// Add a next page link
 		if ($num_pages > 1 && !$link_to_all && $cur_page < $num_pages)
-			$pages[] = '<a rel="next"'.(empty($pages) ? ' class="item1"' : '').' href="'.$link.'&amp;p='.($cur_page +1).'">'.$lang_common['Next'].'</a>';
+			$pages[] = '<a rel="next"'.(empty($pages) ? ' class="item1"' : '').' href="'.$link.'&amp;p='.($cur_page +1).'">'.$next_text.'</a>';
 	}
 
 	return implode(' ', $pages);
@@ -976,10 +981,14 @@ function format_time($timestamp, $date_only = false, $date_format = null, $time_
 	$now = time();
 
 	if(is_null($date_format))
-		$date_format = $forum_date_formats[$user['date_format']];
+		$date_format = isset($forum_date_formats[$user['date_format']]) ? $forum_date_formats[$user['date_format']] : 'Y-m-d';
 
 	if(is_null($time_format))
-		$time_format = $forum_time_formats[$user['time_format']];
+		$time_format = isset($forum_time_formats[$user['time_format']]) ? $forum_time_formats[$user['time_format']] : 'H:i:s';
+
+	// Ensure formats are not null
+	$date_format = $date_format ?? 'Y-m-d';
+	$time_format = $time_format ?? 'H:i:s';
 
 	$date = gmdate($date_format, $timestamp);
 	$today = gmdate($date_format, $now+$diff);
@@ -1009,7 +1018,10 @@ function forum_number_format($number, $decimals = 0)
 {
 	global $lang_common;
 
-	return is_numeric($number) ? number_format($number, $decimals, $lang_common['lang_decimal_point'], $lang_common['lang_thousands_sep']) : $number;
+	$decimal_point = isset($lang_common['lang_decimal_point']) ? $lang_common['lang_decimal_point'] : '.';
+	$thousands_sep = isset($lang_common['lang_thousands_sep']) ? $lang_common['lang_thousands_sep'] : ',';
+
+	return is_numeric($number) ? number_format($number, $decimals, $decimal_point, $thousands_sep) : $number;
 }
 
 
@@ -1193,7 +1205,7 @@ function random_pass($len)
 //
 function pun_hash($str)
 {
-	return sha1($str);
+	return sha1((string)$str);
 }
 
 
@@ -1241,7 +1253,7 @@ function check_csrf($token)
 //
 function get_remote_address()
 {
-	$remote_addr = $_SERVER['REMOTE_ADDR'];
+	$remote_addr = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
 
 	// If we are behind a reverse proxy try to find the real users IP
 	if (defined('FORUM_BEHIND_REVERSE_PROXY'))
@@ -1874,9 +1886,10 @@ function split_text($text, $start, $end, $retab = true)
 	for ($i = 0;$i < $num_parts;$i++)
 		$result[1 - ($i % 2)][] = $parts[$i];
 
-	if ($pun_config['o_indent_num_spaces'] != 8 && $retab)
+	if (isset($pun_config['o_indent_num_spaces']) && $pun_config['o_indent_num_spaces'] != 8 && $retab)
 	{
-		$spaces = str_repeat(' ', $pun_config['o_indent_num_spaces']);
+		$indent_spaces = (int)$pun_config['o_indent_num_spaces'];
+		$spaces = str_repeat(' ', $indent_spaces);
 		$result[1] = str_replace("\t", $spaces, $result[1]);
 	}
 
@@ -1931,9 +1944,10 @@ function extract_blocks($text, $start, $end, $retab = true)
 		}
 	}
 
-	if ($pun_config['o_indent_num_spaces'] != 8 && $retab)
+	if (isset($pun_config['o_indent_num_spaces']) && $pun_config['o_indent_num_spaces'] != 8 && $retab)
 	{
-		$spaces = str_repeat(' ', $pun_config['o_indent_num_spaces']);
+		$indent_spaces = (int)$pun_config['o_indent_num_spaces'];
+		$spaces = str_repeat(' ', $indent_spaces);
 		$text = str_replace("\t", $spaces, $text);
 	}
 
