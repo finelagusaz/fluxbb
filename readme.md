@@ -10,7 +10,7 @@ of the other forums have whilst not sacrificing essential functionality or usabi
 ## Requirements
 
 * A webserver
-* PHP 7.4.0 or later
+* PHP 8.1 or later (PHP 7.4 is no longer supported)
 * A database such as MySQL 5.7.0 or later, PostgreSQL 10.0 or later, or SQLite 3
 
 ## Recommendations
